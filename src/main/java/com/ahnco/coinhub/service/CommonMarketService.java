@@ -1,18 +1,15 @@
 package com.ahnco.coinhub.service;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Map;
 
 @Service
+@RequiredArgsConstructor
 public class CommonMarketService {
 
     private final Map<String, MarketService> marketServices;
-
-    public CommonMarketService(Map<String, MarketService> marketServices) {
-        this.marketServices = marketServices;
-    }
 
     public double getPrice(String market, String coin) {
         MarketService marketService = null;

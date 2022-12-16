@@ -1,17 +1,15 @@
 package com.ahnco.coinhub.service;
 
 import com.ahnco.coinhub.feign.UpbitFeignClient;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class UpbitMarketService implements MarketService{
 
     private final UpbitFeignClient upbitFeignClient;
 
-    public UpbitMarketService(UpbitFeignClient upbitFeignClient) {
-        this.upbitFeignClient = upbitFeignClient;
-    }
- 
     @Override
     public double getCoinCurrentPrice(String coin) {
         // coin : 대문자, 소문자
