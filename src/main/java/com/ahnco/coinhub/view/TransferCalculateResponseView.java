@@ -14,4 +14,12 @@ public class TransferCalculateResponseView {
     private Map<Double, Double> buyOrderBook;
     private Map<Double, Double> sellOrderBook;
 
+    public static TransferCalculateResponseView of(TransferCalculateDTO dto){
+        return new TransferCalculateResponseView(
+          dto.getCoin(),
+          dto.getAmount(),
+          dto.getBuyOrderBook(),
+          dto.getSellOrderBook()
+        );
+    }
 }

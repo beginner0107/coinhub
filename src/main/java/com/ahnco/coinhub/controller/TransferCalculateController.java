@@ -13,17 +13,15 @@ import java.util.Map;
 @RestController
 public class TransferCalculateController {
 
+    private TransferCalculateService transferCalculateService;
+
     @GetMapping("/transfer-calculate")
     public TransferCalculateResponseView getPrice(
             @RequestParam String fromMarket,
             @RequestParam String toMarket,
             @RequestParam double amount
     ) {
-        return new TransferCalculateResponseView(
-          "BTC",
-          100000,
-          Map.of(123.123D, 123.123D),
-          Map.of(123.123D, 123.123D)
-        );
+        return TransferCalculateResponseView.of(
+                transferCalculateService.calculate(fromMarket, toMarket, amount));
     }
 }
