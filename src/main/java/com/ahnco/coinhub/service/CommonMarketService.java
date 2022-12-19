@@ -14,10 +14,10 @@ public class CommonMarketService {
     private final Map<String, MarketService> marketServices;
 
     public double getPrice(String market, String coin) {
-        MarketService marketService = getCommonCoins(marketServices, market);
+        MarketService marketService = getMarketService(marketServices, market);
          return marketService.getCoinCurrentPrice(coin);
     }
-
+ 
     public List<String> getCommonCoin(String fromMarket, String toMarket){
         MarketService fromMarketService = getMarketService(marketServices, fromMarket);
         MarketService toMarketService = getMarketService(marketServices, toMarket);
