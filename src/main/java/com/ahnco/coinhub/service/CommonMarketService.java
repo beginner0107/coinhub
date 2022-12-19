@@ -12,13 +12,16 @@ public class CommonMarketService {
     private final Map<String, MarketService> marketServices;
 
     public double getPrice(String market, String coin) {
-        MarketService marketService = null;
+        MarketService marketService = getCommonCoins(marketServices, market);
+         return marketService.getCoinCurrentPrice(coin);
+    }
+
+    public static MarketService getCommonCoins(Map<String, MarketService> marketServices, String market){
         for(String key : marketServices.keySet()){
             if(key.substring(0, market.length()).equals(market.toLowerCase())){
-                marketService = marketServices.get(key);
-                break;
+                return marketServices.get(key);
             }
         }
-         return marketService.getCoinCurrentPrice(coin);
+        return null;
     }
 }
