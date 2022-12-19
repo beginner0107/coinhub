@@ -17,7 +17,7 @@ public class CommonMarketService {
         MarketService marketService = getMarketService(marketServices, market);
          return marketService.getCoinCurrentPrice(coin);
     }
- 
+
     public List<String> getCommonCoin(String fromMarket, String toMarket){
         MarketService fromMarketService = getMarketService(marketServices, fromMarket);
         MarketService toMarketService = getMarketService(marketServices, toMarket);
