@@ -16,7 +16,7 @@ public class BithumbMarketService implements MarketService {
     @Override
     public double getCoinCurrentPrice(String coin) {
         return Double.parseDouble(
-                bithumbFeignClient.getCoinPrice(coin.toLowerCase() + "_KRW")
+                bithumbFeignClient.getCoinPrice(coin.toUpperCase() + "_KRW")
                         .getData()
                         .getClosing_price());
     }
