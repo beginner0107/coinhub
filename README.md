@@ -26,3 +26,9 @@
 - `Upbit`와 `Bithumb` 거래소에서 공통으로 거래하는 코인들의 목록을 보여주는 부분을 구현
 
 ![img_1.png](img_1.png)
+
+### 22.12.21
+- `BithumbMarketService`, `CommonMarketService`, `UpbitMarketService` 테스트 코드 구현
+- 호가창을 이용해서 살 수 있는 코인과, 몇 개를 살 수 있는지 추천해주는 서비스 기능을 구현(빗썸만)
+- reference : https://apidocs.bithumb.com/reference/%ED%98%B8%EA%B0%80-%EC%A0%95%EB%B3%B4-%EC%A1%B0%ED%9A%8C-all 
+- `calculateBuy()` 메서드를 테스트하는 테스트 코드 구현
