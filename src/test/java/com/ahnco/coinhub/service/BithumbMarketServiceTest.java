@@ -1,5 +1,6 @@
 package com.ahnco.coinhub.service;
 
+import com.ahnco.coinhub.dto.CoinBuyDTO;
 import com.ahnco.coinhub.feign.BithumbFeignClient;
 import com.ahnco.coinhub.feign.response.BithumbResponse;
 import com.ahnco.coinhub.model.BithumbAssetEachStatus;
@@ -62,6 +63,32 @@ class BithumbMarketServiceTest {
         assertThat(result.size()).isEqualTo(3);
     }
 
+    @Test
+    void calculateBuyTest(){
+        // Given
+        List<String> commonCoin = List.of("A", "B");
+
+        BithumbResponse<Map<String, Object>> mockOrderBook = mockBithumbOrderBook();
+        when(bithumbFeignClient.getOrderBook()).thenReturn(mockOrderBook);
+
+        // When
+        CoinBuyDTO result = bithumbMarketService.calculateBuy(commonCoin, 5);
+
+        // Then
+        assertThat(result.getAmounts().get("A")).isEqualTo(1 + 1 + 0.5);
+        assertThat(result.getOrderBooks().get("A").get(1D)).isEqualTo(1);
+        assertThat(result.getOrderBooks().get("A").get(2D)).isEqualTo(1.0);
+        assertThat(result.getOrderBooks().get("A").get(4D)).isEqualTo(0.5);
+
+        assertThat(result.getAmounts().get("B")).isEqualTo(2 + 1.5);
+        assertThat(result.getOrderBooks().get("B").get(1D)).isEqualTo(2.0);
+        assertThat(result.getOrderBooks().get("B").get(2D)).isEqualTo(1.5);
+
+        assertThat(result.getAmounts().get("C")).isEqualTo(3 + 1.0);
+        assertThat(result.getOrderBooks().get("C").get(1D)).isEqualTo(3.0);
+        assertThat(result.getOrderBooks().get("C").get(2D)).isEqualTo(1.0);
+    }
+
     private BithumbResponse<BithumbCoinPrice> mockBithumbCoinPrice(String price) {
         BithumbResponse response = new BithumbResponse();
         BithumbCoinPrice data = new BithumbCoinPrice();
@@ -78,5 +105,51 @@ class BithumbMarketServiceTest {
         data.put(coin3, new BithumbAssetEachStatus(1, 1));
         response.setData(data);
         return response;
+    }
+
+    private BithumbResponse<Map<String, Object>> mockBithumbOrderBook() {
+        BithumbResponse<Map<String, Object>> result = new BithumbResponse<>();
+        result.setData(
+                Map.of(
+                        "A", Map.of(
+                                "bids", List.of( // wanna Buy
+                                        Map.of("price", "4","quantity","1"),
+                                        Map.of("price", "2","quantity","1"),
+                                        Map.of("price", "1","quantity","1")
+                                ),
+                                "asks", List.of( // wanna Sell
+                                        Map.of("price", "1","quantity","1"), // 1
+                                        Map.of("price", "2","quantity","1"), // 2
+                                        Map.of("price", "4","quantity","1") // 2
+                                )
+                        ),
+                        "B", Map.of(
+                                "bids", List.of( // wanna Buy
+                                        Map.of("price", "4","quantity","2"),
+                                        Map.of("price", "2","quantity","2"),
+                                        Map.of("price", "1","quantity","2")
+                                ),
+                                "asks", List.of( // wanna Sell
+                                        Map.of("price", "1","quantity","2"), // 2
+                                        Map.of("price", "2","quantity","2"), // 1.5
+                                        Map.of("price", "4","quantity","2")
+                                )
+                        ),
+                        "C", Map.of(
+                                "bids", List.of( // wanna Buy
+                                        Map.of("price", "4","quantity","3"),
+                                        Map.of("price", "2","quantity","3"),
+                                        Map.of("price", "1","quantity","3")
+                                ),
+                                "asks", List.of( // wanna Sell
+                                        Map.of("price", "1","quantity","3"), // 3
+                                        Map.of("price", "2","quantity","3"), // 1
+                                        Map.of("price", "4","quantity","3")
+                                )
+                        )
+                )
+        );
+
+        return result;
     }
 }
