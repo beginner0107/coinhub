@@ -1,17 +1,24 @@
 package com.ahnco.coinhub.service;
 
+import com.ahnco.coinhub.dto.CoinBuyDTO;
+import com.ahnco.coinhub.dto.CoinSellDTO;
 import com.ahnco.coinhub.feign.UpbitFeignClient;
 import com.ahnco.coinhub.model.UpbitCoinPrice;
 import com.ahnco.coinhub.model.UpbitMarketCode;
+import com.ahnco.coinhub.model.UpbitOrderBooks;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -59,9 +66,87 @@ class UpbitMarketServiceTest {
         assertThat(result.size()).isEqualTo(3);
     }
 
+    @Test
+    void calculateBuyTest() {
+        // given
+        List<String> commonCoins = List.of("A", "B");
+        List<UpbitOrderBooks> mockOrderBook = mockUpbitOrderBooks();
+        when(upbitFeignClient.getOrderBooks(commonCoins)).thenReturn(mockOrderBook);
+
+        // when
+        CoinBuyDTO result = upbitMarketService.calculateBuy(commonCoins, 5);
+
+        // then
+        assertEquals(1+1+0.5, result.getAmounts().get("A"));
+        assertEquals(1, result.getOrderBooks().get("A").get(1D));
+        assertEquals(1, result.getOrderBooks().get("A").get(2D));
+        assertEquals(0.5, result.getOrderBooks().get("A").get(4D));
+
+        assertEquals(2+1.5, result.getAmounts().get("B"));
+        assertEquals(2, result.getOrderBooks().get("B").get(1D));
+        assertEquals(1.5, result.getOrderBooks().get("B").get(2D));
+    }
+
+    @Test
+    void calculateSellTest() {
+        // given
+        Map<String, Double> amounts = Map.of("A", 2.5, "B", 3D, "C", 123D);
+        List<UpbitOrderBooks> mockOrderBook = mockUpbitOrderBooks();
+        List<String> commonCoins = amounts.keySet()
+                .stream()
+                .map(k -> "KRW-" + k)
+                .toList();
+        when(upbitFeignClient.getOrderBooks(commonCoins)).thenReturn(mockOrderBook);
+
+        // when
+        CoinSellDTO result = upbitMarketService.calculateSell(new CoinBuyDTO(amounts, null));
+
+        // then
+        assertEquals(4*1 + 2*1 + 1*0.5, result.getAmounts().get("A"));
+        assertEquals(1, result.getOrderBooks().get("A").get(4D));
+        assertEquals(1, result.getOrderBooks().get("A").get(2D));
+        assertEquals(0.5, result.getOrderBooks().get("A").get(1D));
+
+        assertEquals(4*2 + 2*1, result.getAmounts().get("B"));
+        assertEquals(2, result.getOrderBooks().get("B").get(4D));
+        assertEquals(1, result.getOrderBooks().get("B").get(2D));
+
+        assertNull(result.getAmounts().get("C"));
+        assertNull(result.getOrderBooks().get("C"));
+    }
+
     private UpbitMarketCode mockUpbitMarketCode(String coin){
         UpbitMarketCode result = new UpbitMarketCode();
         result.setMarket("KRW-" + coin);
         return result;
+    }
+
+    private List<UpbitOrderBooks> mockUpbitOrderBooks() {
+        UpbitOrderBooks orderbook1 = new UpbitOrderBooks();
+        orderbook1.setMarket("KRW-A");
+        orderbook1.setOrderbook_units(new ArrayList<>(List.of(
+                orderbook1.new UpbitEachOrderBooks(4D, 1D, 1D, 1D),
+                orderbook1.new UpbitEachOrderBooks(2D, 2D, 1D, 1D),
+                orderbook1.new UpbitEachOrderBooks(1D, 4D, 1D, 1D)
+        )));
+
+        UpbitOrderBooks orderbook2 = new UpbitOrderBooks();
+        orderbook2.setMarket("KRW-B");
+        orderbook2.setOrderbook_units(new ArrayList<>(List.of(
+                orderbook2.new UpbitEachOrderBooks(4D, 1D, 2D, 2D),
+                orderbook2.new UpbitEachOrderBooks(2D, 2D, 2D, 2D),
+                orderbook2.new UpbitEachOrderBooks(1D, 4D, 2D, 2D)
+        )));
+
+        UpbitOrderBooks orderbook3 = new UpbitOrderBooks();
+        orderbook3.setMarket("KRW-C");
+        orderbook3.setOrderbook_units(new ArrayList<>(List.of(
+                orderbook3.new UpbitEachOrderBooks(4D, 1D, 3D, 3D),
+                orderbook3.new UpbitEachOrderBooks(2D, 2D, 3D, 3D),
+                orderbook3.new UpbitEachOrderBooks(1D, 4D, 3D, 3D)
+        )));
+
+
+        return List.of(orderbook1, orderbook2, orderbook3);
     }
 }
