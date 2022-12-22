@@ -12,10 +12,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -49,20 +46,24 @@ public class BithumbMarketService implements MarketService {
     @Override
     public CoinBuyDTO calculateBuy(List<String> commonCoins, double amount) {
         Map<String, Double> amounts = new HashMap<>();
-        Map<String, Map<Double, Double>> orderBooks = new HashMap<>();
+        Map<String, SortedMap<Double, Double>> orderBooks = new HashMap<>();
 
         // Feign으로 orderbook(호가 창) 가져오기
         Map<String, Object> bithumbResponse = bithumbFeignClient.getOrderBook().getData();
 
         // orderbook for 돌면
-        bithumbResponse.forEach((k, v) -> {
-            if(!(k.equalsIgnoreCase("timestamp") || k.equalsIgnoreCase("payment_currency"))){
+        bithumbResponse.forEach((k, v) -> { // key: coin, v: object
+            if(!(k.equalsIgnoreCase("timestamp") || k.equalsIgnoreCase("payment_currency"))) {
                 double availableCurrency = amount;
                 double availableCoin = 0;
+
                 String coin = k;
-                Map<Double, Double> eachOrderBook = new HashMap<>();
+                SortedMap<Double, Double> eachOrderBook = new TreeMap<>();
                 List<Map<String, String>> wannaSell =
                         (List<Map<String, String>>) ((Map<String, Object>) v).get("asks");
+
+                wannaSell.sort(Comparator.comparingDouble(k1 -> Double.parseDouble(k1.get("price")))); // 오름차순
+
 
                 for(int i = 0; i < wannaSell.size(); i ++){
                     Double price = Double.valueOf(wannaSell.get(i).get("price"));
@@ -95,7 +96,50 @@ public class BithumbMarketService implements MarketService {
 
     @Override
     public CoinSellDTO calculateSell(CoinBuyDTO buyDTO) {
-        return null;
+        Map<String, Double> sellingAmounts = buyDTO.getAmounts(); // 어떤 코인을 얼마큼 샀는지 ?
+        Map<String, Double> amounts = new HashMap<>(); // 어떤 코인을 몇 개 팔것인지?
+        Map<String, SortedMap<Double, Double>> orderBooks = new HashMap<>(); // 호가 창 만들기 가격 : 코인 개수
+
+        Map<String, Object> bithumbResponse = bithumbFeignClient.getOrderBook().getData(); // 호가 창 가져오기
+        bithumbResponse.forEach((k,v) -> { // key: coin, v: object
+            if(!(k.equalsIgnoreCase("timestamp") || k.equalsIgnoreCase("payment_currency"))) {
+                String coin = k;
+                double sellCurrency = 0; // 팔고 난 다음 금액
+                Double availableCoin = sellingAmounts.get(coin); // 코인을 key로 넣어서 얼마의 개수의 코인을 샀는지 가져온다.
+                if(availableCoin != null) { // 코인을 샀다면..
+                    SortedMap<Double, Double> eachOrderBook = new TreeMap<>(Comparator.reverseOrder()); // 얼마에 매도할지 (가격과 수량)
+                    List<Map<String, String>> wannaBuy = (List<Map<String, String>> )((Map<String, Object>)v).get("bids");
+                    // price : 가격1, quantity : 수량1
+                    // price : 가격2, quantity : 수량2 이런식으로..
+                    wannaBuy.sort(Comparator
+                            .comparingDouble(k1 -> Double.parseDouble(((Map<String, String>)k1).get("price"))).reversed()); // 내림차순 (비싸게 매도해야 이득)
+
+                    for(int i=0; i<wannaBuy.size(); i++) {
+                        Double price = Double.parseDouble(wannaBuy.get(i).get("price"));
+                        Double quantity = Double.parseDouble(wannaBuy.get(i).get("quantity"));
+                        double eachTotalPrice = price * quantity; // 특정 가격에 * 수량 매도한 금액
+
+                        // 만약 코인 양 더 많으면 끝내기 (코인을 산 개수(availableCoin)보다 크거나 같을 경우(quantity))
+                        if(quantity >= availableCoin) { // 못넘어갈경우
+                            sellCurrency += price * availableCoin; // 가격 * 산 개수 = 현재 매도한 금액이 된다
+                            eachOrderBook.put(price, availableCoin); // 매도 추천 창에 넣어준다
+                            availableCoin = 0D; // 코인을 다 팔았으니 0D
+                            break;
+                        } else { // 다음 스텝 넘어갈경우
+                            sellCurrency += eachTotalPrice; // 매도한 금액을 더해주고
+                            eachOrderBook.put(price, quantity); // 매도 추천 창에 넣어준다.
+                            availableCoin -= quantity; // 코인 개수를 감소시켜준다
+                        }
+                    }
+                    // 모두 팔지 못했을때 조건 추가 > 넣지 말기
+                    if(availableCoin == 0) { // 모두 팔았을 경우에만! 추가
+                        amounts.put(coin, sellCurrency);
+                        orderBooks.put(coin, eachOrderBook);
+                    }
+                }
+            }
+        });
+        return new CoinSellDTO(amounts, orderBooks);
     }
 
     @Override

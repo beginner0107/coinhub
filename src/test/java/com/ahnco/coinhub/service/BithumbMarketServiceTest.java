@@ -1,6 +1,7 @@
 package com.ahnco.coinhub.service;
 
 import com.ahnco.coinhub.dto.CoinBuyDTO;
+import com.ahnco.coinhub.dto.CoinSellDTO;
 import com.ahnco.coinhub.feign.BithumbFeignClient;
 import com.ahnco.coinhub.feign.response.BithumbResponse;
 import com.ahnco.coinhub.model.BithumbAssetEachStatus;
@@ -11,6 +12,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -89,6 +91,33 @@ class BithumbMarketServiceTest {
         assertThat(result.getOrderBooks().get("C").get(2D)).isEqualTo(1.0);
     }
 
+    @Test
+    void calculateSellTest() {
+        // given
+        // 특정 코인을 얼마의 수량으로 매수했는지
+        Map<String, Double> amounts = Map.of("A", 2.5, "B", 3D, "C", 123D);
+        // 얼마에 매수했는지 목록을 받아오는 것을 mockBithumbOrderBook()을 이용해 처리
+        BithumbResponse<Map<String, Object>> mockOrderBook = mockBithumbOrderBook();
+        when(bithumbFeignClient.getOrderBook()).thenReturn(mockOrderBook);
+
+        // when
+        CoinSellDTO result = bithumbMarketService.calculateSell(new CoinBuyDTO(amounts, null));
+
+        // then
+        // 4원에 * 1개를 팔고 + 2원에 * 2개를 팔고 + 1원에 0.5개를 판다.
+        assertThat(result.getAmounts().get("A")).isEqualTo(4 * 1 + 2 * 1 + 1 * 0.5);
+        assertThat(result.getOrderBooks().get("A").get(4D)).isEqualTo(1);
+        assertThat(result.getOrderBooks().get("A").get(2D)).isEqualTo(1);
+        assertThat(result.getOrderBooks().get("A").get(1D)).isEqualTo(0.5);
+
+        assertThat(result.getAmounts().get("B")).isEqualTo(4 * 2 + 2 * 1);
+        assertThat(result.getOrderBooks().get("B").get(4D)).isEqualTo(2);
+        assertThat(result.getOrderBooks().get("B").get(2D)).isEqualTo(1);
+
+        assertThat(result.getAmounts().get("C")).isNull();
+        assertThat(result.getOrderBooks().get("C")).isNull();
+    }
+
     private BithumbResponse<BithumbCoinPrice> mockBithumbCoinPrice(String price) {
         BithumbResponse response = new BithumbResponse();
         BithumbCoinPrice data = new BithumbCoinPrice();
@@ -112,40 +141,40 @@ class BithumbMarketServiceTest {
         result.setData(
                 Map.of(
                         "A", Map.of(
-                                "bids", List.of( // wanna Buy
-                                        Map.of("price", "4","quantity","1"),
+                                "bids", new ArrayList<>(List.of( // wanna Buy
+                                        Map.of("price", "1","quantity","1"),
                                         Map.of("price", "2","quantity","1"),
-                                        Map.of("price", "1","quantity","1")
-                                ),
-                                "asks", List.of( // wanna Sell
-                                        Map.of("price", "1","quantity","1"), // 1
+                                        Map.of("price", "4","quantity","1")
+                                )),
+                                "asks", new ArrayList<>(List.of( // wanna Sell
+                                        Map.of("price", "4","quantity","1"), // 2
                                         Map.of("price", "2","quantity","1"), // 2
-                                        Map.of("price", "4","quantity","1") // 2
-                                )
+                                        Map.of("price", "1","quantity","1") // 1
+                                ))
                         ),
                         "B", Map.of(
-                                "bids", List.of( // wanna Buy
-                                        Map.of("price", "4","quantity","2"),
+                                "bids", new ArrayList<>(List.of( // wanna Buy
+                                        Map.of("price", "1","quantity","2"),
                                         Map.of("price", "2","quantity","2"),
-                                        Map.of("price", "1","quantity","2")
-                                ),
-                                "asks", List.of( // wanna Sell
-                                        Map.of("price", "1","quantity","2"), // 2
-                                        Map.of("price", "2","quantity","2"), // 1.5
                                         Map.of("price", "4","quantity","2")
-                                )
+                                )),
+                                "asks", new ArrayList<>(List.of( // wanna Sell
+                                        Map.of("price", "4","quantity","2"),
+                                        Map.of("price", "2","quantity","2"), // 1.5
+                                        Map.of("price", "1","quantity","2") // 2
+                                ))
                         ),
                         "C", Map.of(
-                                "bids", List.of( // wanna Buy
-                                        Map.of("price", "4","quantity","3"),
+                                "bids", new ArrayList<>(List.of( // wanna Buy
+                                        Map.of("price", "1","quantity","3"),
                                         Map.of("price", "2","quantity","3"),
-                                        Map.of("price", "1","quantity","3")
-                                ),
-                                "asks", List.of( // wanna Sell
-                                        Map.of("price", "1","quantity","3"), // 3
-                                        Map.of("price", "2","quantity","3"), // 1
                                         Map.of("price", "4","quantity","3")
-                                )
+                                )),
+                                "asks", new ArrayList<>(List.of( // wanna Sell
+                                        Map.of("price", "4","quantity","3"),
+                                        Map.of("price", "2","quantity","3"), // 1
+                                        Map.of("price", "1","quantity","3") // 3
+                                ))
                         )
                 )
         );
