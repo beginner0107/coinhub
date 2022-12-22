@@ -4,8 +4,14 @@ import com.ahnco.coinhub.dto.CoinBuyDTO;
 import com.ahnco.coinhub.dto.CoinSellDTO;
 import com.ahnco.coinhub.feign.BithumbFeignClient;
 import lombok.RequiredArgsConstructor;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -16,6 +22,9 @@ import java.util.Map;
 public class BithumbMarketService implements MarketService {
 
     private final BithumbFeignClient bithumbFeignClient;
+
+    @Value("${feeUrl.bithumb}")
+    private String feeUrl;
 
     @Override
     public double getCoinCurrentPrice(String coin) {
@@ -87,5 +96,22 @@ public class BithumbMarketService implements MarketService {
     @Override
     public CoinSellDTO calculateSell(CoinBuyDTO buyDTO) {
         return null;
+    }
+
+    @Override
+    public Map<String, Double> calculateFee() throws IOException {
+        Map<String, Double> result = new HashMap<>();
+        Document doc = Jsoup.connect(feeUrl).timeout(10000).get();
+        Elements elements = doc.select("table.fee_in_out tbody tr");
+
+        for(int i = 1; i < elements.size(); i ++){
+            String coinHtml = elements.get(i).select("td.money_type.tx_c").html().trim();
+            coinHtml = coinHtml.substring(coinHtml.indexOf("(") + 1, coinHtml.indexOf(")"));
+
+            String coinFeeHtml = elements.get(i).select("div.right.out_fee").html().trim();
+            if(coinFeeHtml.length() == 0) coinFeeHtml = "0";
+            result.put(coinHtml, Double.parseDouble(coinFeeHtml));
+        }
+        return result;
     }
 }
