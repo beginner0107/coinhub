@@ -1,4 +1,4 @@
-package com.ahnco.coinhub.service;
+package com.ahnco.coinhub.service.upbit;
 
 import com.ahnco.coinhub.dto.CoinBuyDTO;
 import com.ahnco.coinhub.dto.CoinSellDTO;
@@ -6,6 +6,7 @@ import com.ahnco.coinhub.feign.UpbitFeignClient;
 import com.ahnco.coinhub.model.UpbitCoinPrice;
 import com.ahnco.coinhub.model.UpbitMarketCode;
 import com.ahnco.coinhub.model.UpbitOrderBooks;
+import com.ahnco.coinhub.service.UpbitMarketService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
