@@ -1,5 +1,6 @@
 package com.ahnco.coinhub.service;
 
+import com.ahnco.coinhub.constant.CacheConstants;
 import com.ahnco.coinhub.dto.CoinBuyDTO;
 import com.ahnco.coinhub.dto.CoinSellDTO;
 import com.ahnco.coinhub.feign.BithumbFeignClient;
@@ -141,7 +142,7 @@ public class BithumbMarketService implements MarketService {
         return new CoinSellDTO(amounts, orderBooks);
     }
 
-    @Cacheable("BITHUMB_CALCULATE_FEE")
+    @Cacheable(CacheConstants.BITHUMB_WITHDRAWAL_FEE)
     @Override
     public Map<String, Double> calculateFee() throws IOException {
         Map<String, Double> result = new HashMap<>();
