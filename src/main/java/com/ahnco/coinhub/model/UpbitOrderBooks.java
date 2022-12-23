@@ -2,12 +2,15 @@ package com.ahnco.coinhub.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.List;
 
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class UpbitOrderBooks {
     private String market;
     private String timestamp;
@@ -15,10 +18,12 @@ public class UpbitOrderBooks {
     private String total_bid_size;
     private List<UpbitEachOrderBooks> orderbook_units;
 
+
     @Getter
     @Setter
     @AllArgsConstructor
-    public class UpbitEachOrderBooks{
+    @NoArgsConstructor
+    public static class UpbitEachOrderBooks{
         private double ask_price;
         private double bid_price;
         private double ask_size;

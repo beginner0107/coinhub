@@ -3,6 +3,7 @@ package com.ahnco.coinhub.feign;
 import com.ahnco.coinhub.model.UpbitCoinPrice;
 import com.ahnco.coinhub.model.UpbitMarketCode;
 import com.ahnco.coinhub.model.UpbitOrderBooks;
+import lombok.EqualsAndHashCode;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -19,5 +20,5 @@ public interface UpbitFeignClient {
     List<UpbitMarketCode> getMarketCode();
 
     @GetMapping("/orderbook")
-    List<UpbitOrderBooks> getOrderBooks(@RequestParam List<String> markets);
+    List<UpbitOrderBooks> getOrderBooks(@RequestParam("markets") List<String> markets);
 }
