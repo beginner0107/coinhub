@@ -1,10 +1,11 @@
-package com.ahnco.coinhub.service;
+package com.ahnco.coinhub.service.bithumb;
 
 import com.ahnco.coinhub.dto.CoinBuyDTO;
 import com.ahnco.coinhub.feign.BithumbFeignClient;
 import com.ahnco.coinhub.feign.response.BithumbResponse;
 import com.ahnco.coinhub.model.BithumbAssetEachStatus;
 import com.ahnco.coinhub.model.BithumbCoinPrice;
+import com.ahnco.coinhub.service.BithumbMarketService;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
