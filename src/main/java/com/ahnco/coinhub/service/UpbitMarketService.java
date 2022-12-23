@@ -44,10 +44,9 @@ public class UpbitMarketService implements MarketService{
     public CoinBuyDTO calculateBuy(List<String> commonCoins, double amount) {
         Map<String, Double> amounts = new HashMap<>(); // 어떤 코인을 얼마 매수했는지
         Map<String, SortedMap<Double, Double>> orderBooks = new HashMap<>(); // 어떤 코인의 (가격/수량) 매수 표
-        commonCoins.stream().map(k -> "KRW-" + k.toUpperCase()).toList();
-
-        List<UpbitOrderBooks> bithumbResponse = upbitFeignClient.getOrderBooks(commonCoins);
-        bithumbResponse.forEach(k -> {
+        commonCoins = commonCoins.stream().map(k -> "KRW-" + k.toUpperCase()).toList();
+        List<UpbitOrderBooks> upbitResponse = upbitFeignClient.getOrderBooks(commonCoins);
+        upbitResponse.forEach(k -> {
             double availableCurrency = amount;
             double availableCoin = 0;
             String coin = k.getMarket().substring(4);
@@ -81,13 +80,11 @@ public class UpbitMarketService implements MarketService{
                 orderBooks.put(coin, eachOrderBook);
             }
         });
-
         return new CoinBuyDTO(amounts, orderBooks);
     }
 
     @Override
-    public CoinSellDTO calculateSell(CoinBuyDTO buyDTO) {
-        Map<String, Double> sellingAmounts = buyDTO.getAmounts();
+    public CoinSellDTO calculateSell(Map<String, Double> sellingAmounts) {
         Map<String, Double> amounts = new HashMap<>();
         Map<String, SortedMap<Double, Double>> orderBooks = new HashMap<>();
         List<String> coins = sellingAmounts.keySet().stream().map(k -> "KRW-" + k.toUpperCase()).toList();
@@ -100,7 +97,7 @@ public class UpbitMarketService implements MarketService{
             Double availableCoin = sellingAmounts.get(coin);
 
             if(availableCoin != null) {
-                SortedMap<Double, Double> eachOrderBook = new TreeMap<>();
+                SortedMap<Double, Double> eachOrderBook = new TreeMap<>(Comparator.reverseOrder());
                 List<UpbitOrderBooks.UpbitEachOrderBooks> eachOrderBooks = k.getOrderbook_units();
                 eachOrderBooks.sort(Comparator
                         .comparingDouble(UpbitOrderBooks.UpbitEachOrderBooks::getBid_price).reversed()); // bid_price 기준 내림차순,

@@ -50,10 +50,11 @@ public class BithumbMarketService implements MarketService {
 
         // Feign으로 orderbook(호가 창) 가져오기
         Map<String, Object> bithumbResponse = bithumbFeignClient.getOrderBook().getData();
-
         // orderbook for 돌면
         bithumbResponse.forEach((k, v) -> { // key: coin, v: object
-            if(!(k.equalsIgnoreCase("timestamp") || k.equalsIgnoreCase("payment_currency"))) {
+            if(!(k.equalsIgnoreCase("timestamp") || k.equalsIgnoreCase("payment_currency"))
+                    && commonCoins.contains(k)
+            ) {
                 double availableCurrency = amount;
                 double availableCoin = 0;
 
@@ -61,7 +62,6 @@ public class BithumbMarketService implements MarketService {
                 SortedMap<Double, Double> eachOrderBook = new TreeMap<>();
                 List<Map<String, String>> wannaSell =
                         (List<Map<String, String>>) ((Map<String, Object>) v).get("asks");
-
                 wannaSell.sort(Comparator.comparingDouble(k1 -> Double.parseDouble(k1.get("price")))); // 오름차순
 
 
@@ -95,8 +95,7 @@ public class BithumbMarketService implements MarketService {
     }
 
     @Override
-    public CoinSellDTO calculateSell(CoinBuyDTO buyDTO) {
-        Map<String, Double> sellingAmounts = buyDTO.getAmounts(); // 어떤 코인을 얼마큼 샀는지 ?
+    public CoinSellDTO calculateSell(Map<String, Double> sellingAmounts) {
         Map<String, Double> amounts = new HashMap<>(); // 어떤 코인을 몇 개 팔것인지?
         Map<String, SortedMap<Double, Double>> orderBooks = new HashMap<>(); // 호가 창 만들기 가격 : 코인 개수
 

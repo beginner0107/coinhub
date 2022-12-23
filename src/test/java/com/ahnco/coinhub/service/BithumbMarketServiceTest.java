@@ -68,7 +68,7 @@ class BithumbMarketServiceTest {
     @Test
     void calculateBuyTest(){
         // Given
-        List<String> commonCoin = List.of("A", "B");
+        List<String> commonCoin = List.of("A", "B", "C");
 
         BithumbResponse<Map<String, Object>> mockOrderBook = mockBithumbOrderBook();
         when(bithumbFeignClient.getOrderBook()).thenReturn(mockOrderBook);
@@ -101,7 +101,7 @@ class BithumbMarketServiceTest {
         when(bithumbFeignClient.getOrderBook()).thenReturn(mockOrderBook);
 
         // when
-        CoinSellDTO result = bithumbMarketService.calculateSell(new CoinBuyDTO(amounts, null));
+        CoinSellDTO result = bithumbMarketService.calculateSell(amounts);
 
         // then
         // 4원에 * 1개를 팔고 + 2원에 * 2개를 팔고 + 1원에 0.5개를 판다.
