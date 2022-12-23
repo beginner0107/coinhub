@@ -6,9 +6,9 @@ import com.ahnco.coinhub.feign.BithumbFeignClient;
 import lombok.RequiredArgsConstructor;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -141,6 +141,7 @@ public class BithumbMarketService implements MarketService {
         return new CoinSellDTO(amounts, orderBooks);
     }
 
+    @Cacheable("BITHUMB_CALCULATE_FEE")
     @Override
     public Map<String, Double> calculateFee() throws IOException {
         Map<String, Double> result = new HashMap<>();
